@@ -6,6 +6,7 @@ from prompt import *
 from viz_code import *
 from circuit_gen import *
 from dotenv import load_dotenv
+import requests
 
 app = Flask(__name__)
 
@@ -20,6 +21,7 @@ from phi.vectordb.pgvector import PgVector2
 from phi.storage.assistant.postgres import PgAssistantStorage
 from phi.document.reader.website import WebsiteReader
 from phi.document.reader.pdf import PDFReader
+import uuid
 import os
 
 app = Flask(__name__)
@@ -35,7 +37,7 @@ def get_groq_assistant(collection_name: str) -> Assistant:
     embedder = OpenAIEmbedder(model="text-embedding-3-small", dimensions=1536)
     return Assistant(
         name="groq_rag_assistant",
-        llm=Groq(model="llama3-70b-8192"),
+        llm=Groq(model="llama-3.1-70b-versatile"),
         storage=PgAssistantStorage(table_name="groq_rag_assistant", db_url=db_url),
         knowledge_base=AssistantKnowledge(
             vector_db=PgVector2(
@@ -68,8 +70,8 @@ def initialize_knowledge_base():
     
     return global_assistant, global_run_id
 
-@app.route('/upload', methods=['POST'])
-def upload():
+@app.route('/rag_upload', methods=['POST'])
+def rag_upload():
     global global_assistant, global_run_id
     
     if global_assistant is None:
@@ -93,8 +95,8 @@ def upload():
     
     return jsonify({"message": "Knowledge base updated", "run_id": global_run_id}), 200
 
-@app.route('/chat', methods=['POST'])
-def chat():
+@app.route('/rag_chat', methods=['POST'])
+def rag_chat():
     global global_assistant, global_run_id
     
     if global_assistant is None:
@@ -112,23 +114,26 @@ def chat():
     
     return jsonify({"response": response, "run_id": global_run_id}), 200
 
-@app.route('/get_qiskit_code', methods = ['POST'])
+
+@app.route('/get_qiskit_code', methods=['POST'])
 def get_code_utkarsh():
     data = request.get_json()
     user_input = data["user_input"]
 
-    '''some code'''
-    
+    try:
+        qiskit_code = rag_chat(user_input)
+    except Exception as e:
+        return jsonify({"error": f"Failed to get response from rag_chat: {str(e)}"}), 500
+
+    # Assuming viz_code is defined elsewhere
     final_exec_code = qiskit_code + viz_code
+
     try:
         exec(final_exec_code)
-        
         return jsonify("code executed successfully")
-        
     except Exception as e:
-        print(e)
-        
-    
+        return jsonify({"error": str(e)}), 500
+
 # Flask endpoint for processing the prompt
 @app.route('/process-prompt', methods=['POST'])
 def process_prompt():
