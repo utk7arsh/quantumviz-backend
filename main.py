@@ -2,15 +2,17 @@ import re
 import os
 import json
 import openai
+import tempfile
 import requests
-from circuit_gen import *
+from opeani_func import *
 from flask_cors import CORS
 from speech_to_text import *
-from viz_code import viz_code
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from viz_code import viz_code, qiskit_code
+from flask import Flask, request, jsonify, send_from_directory
 from prompt import chatbot_system_prompt, rag_system_prompt
 
+import boto3  # Add this import at the top of your file
 
 import uuid
 from flask import Flask, request, jsonify
@@ -30,8 +32,8 @@ from pydub import AudioSegment
 import io
 import binascii
 
-app = Flask(__name__)
-CORS(app)
+app = Flask(__name__, static_url_path='', static_folder='quantum_plots')
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 global_assistant: Optional[Assistant] = None
 global_run_id: Optional[str] = None
@@ -224,6 +226,10 @@ def rag_chat():
 ##########################
 ####  Qiskit code ######
 ##########################
+@app.route('/static/<path:filename>')
+def serve_static_files(filename):
+    return send_from_directory(app.static_folder, filename)
+
 
 @app.route('/get_qiskit_code', methods=['POST'])
 def get_code_utkarsh():
@@ -239,6 +245,7 @@ def get_code_utkarsh():
             raise ValueError("No formatted text found in response")
         
         qiskit_code = matches[0].strip()
+        # qiskit_code_v = qiskit_code
         
     except Exception as e:
         return jsonify({"error": f"Failed to get response from rag_chat_utkarsh: {str(e)}"}), 500
@@ -277,22 +284,27 @@ import matplotlib.pyplot as plt
     print("--------------------------------")
     
     html_output_folder = './quantum_plots'
+    s3_bucket_name = 'qubit-store-html'  # Define your S3 bucket name
+    s3_client = boto3.client('s3',
+                             aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),  
+                             aws_secret_access_key=os.getenv('AWS_SECRET_KEY')  
+    ) # Create an S3 client
+
     try:
         exec(final_exec_code, globals())
         generated_html_files = []
-        raw_html_code = []
         
         for filename in os.listdir(html_output_folder):
             if filename.endswith('.html'):
-                generated_html_files.append(os.path.join(html_output_folder, filename))
-        
-        for file in generated_html_files:
-            with open(file, 'r') as f:
-                raw_html_code.append(f.read())
-            
+                # Create a static URL for each HTML file
+                generated_html_files.append(f"/static/{filename}")
+                
+                # Upload to S3
+                s3_client.upload_file(os.path.join(html_output_folder, filename), s3_bucket_name, filename)
+
         return jsonify({
             "message": "code executed successfully",
-            "html_files": raw_html_code,
+            "html_files": generated_html_files,
             "code": final_exec_code
         })
     except Exception as e:
@@ -309,10 +321,6 @@ def process_prompt():
         data = request.json
         user_input = data.get('user_input')
 
-        if not user_input:
-            error_chain.append("user_prompt is required")
-            return jsonify({"errors": error_chain}), 400
-
         try:
             response = process_user_prompt(user_input)
         except Exception as e:
@@ -324,6 +332,49 @@ def process_prompt():
 
     return jsonify({"errors": error_chain}), 500
 
+
+@app.route('/upload_images', methods=['POST'])
+def upload_images():
+    try:
+        if 'image_files' not in request.files:
+            return jsonify({"error": "No image files provided"}), 400
+
+        image_files = request.files.getlist('image_files')  # Get the list of uploaded files
+        temp_file_paths = []  # List to store paths of temporary files
+
+        for image_file in image_files:
+            # Create a temporary file to save the image
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+                temp_file.write(image_file.read())
+                temp_file_path = temp_file.name  # Get the path of the temporary file
+                temp_file_paths.append(temp_file_path)  # Add the path to the list
+
+        response = openai_chat_image(System_image_prompt, temp_file_path)
+        
+        pattern = re.compile(r'-----FORMAT-----(.*?)-----FORMAT-----', re.DOTALL)
+        matches = pattern.findall(response)
+        
+        if not matches:
+            raise ValueError("No formatted text found in response")
+        
+        code = matches[0].strip()
+        
+        # Cleanup: Delete temporary files
+        for temp_file_path in temp_file_paths:
+            os.remove(temp_file_path)
+
+        # Now you can pass temp_file_paths to the OpenAI chatbot or process them as needed
+        # For example:
+        # responses = [openai_chatbot.process_image(path) for path in temp_file_paths]
+
+        return jsonify({"message": "Images uploaded successfully and code generated", "code": code}), 200
+    except Exception as e:
+        # Cleanup in case of an error
+        for temp_file_path in temp_file_paths:
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+        return jsonify({"error": str(e)}), 500
+    
 
 # Define the audio files directory
 AUDIO_FILES_DIR = os.path.join(os.path.dirname(__file__), 'audio_files')

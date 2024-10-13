@@ -30,8 +30,28 @@ def openai_chat(user_prompt, sys_prompt):
         return response_data
     except Exception as e:
         return f"An error occurred: {e}"
+    
+def openai_chat_image(user_prompt, sys_prompt, image_urls):
+    try:
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": [{"type": "text", "text": user_prompt if user_prompt is not None else sys_prompt}]}
+        ]
+        
+        # Iterate over the list of image URLs and add them to the messages
+        for image_url in image_urls:
+            messages[1]["content"].append({"type": "image_url", "image_url": {"url": image_url}})
 
-def process_user_prompt(user_prompt):
+        completion = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages
+        )
+        return completion.choices[0].message
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+
+def process_user_prompt(user_prompt = None):
     try:  
         print(system_prompt)
         

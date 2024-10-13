@@ -84,3 +84,4 @@ flask-cors
 whisper
 pyaudio
 pydub
+boto3

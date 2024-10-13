@@ -271,3 +271,33 @@ Create a toffoli circuit
 </OUTPUT>
 </EXAMPLE 7>
 '''
+
+
+System_image_prompt = '''
+You wil given an image of a circuit convert it to Qiskit Code:
+
+
+below are some common and correct imports you should keep in mind when generating your code:
+ 
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import Aer
+from qiskit.visualization import plot_bloch_multivector
+from qiskit.quantum_info import partial_trace
+
+
+ensure that the output is wrapped around by -----FORMAT----- at the beginning and at the end of the code 
+
+example:
+<OUTPUT>
+-----FORMAT-----
+import os
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import Aer
+from qiskit.quantum_info import partial_trace
+from qiskit.visualization import plot_bloch_multivector
+
+<CODE>
+
+-----FORMAT-----
+</OUTPUT>
+'''
