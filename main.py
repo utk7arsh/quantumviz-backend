@@ -139,7 +139,7 @@ def get_code_utkarsh():
     print("quiskit code", qiskit_code)
     final_exec_code = qiskit_code + viz_code
     
-    html_output_folder = '/Users/aashmanrastogi/Desktop/quantumviz-backend/quantum_plots'
+    html_output_folder = './quantum_plots'
     try:
         exec(final_exec_code, globals())
         # List to store paths of generated HTML files
