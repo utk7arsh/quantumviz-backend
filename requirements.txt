@@ -75,3 +75,8 @@ tzdata
 urllib3
 flask
 uuid
+qiskit
+qiskit-aer
+qiskit-ibm-runtime
+plotly
+matplotlib

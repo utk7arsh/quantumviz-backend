@@ -1,24 +1,23 @@
 
-qiskit_code = '''
-
-
 import os
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import Aer
 from qiskit.quantum_info import partial_trace
 from qiskit.visualization import plot_bloch_multivector
-
-import matplotlib
-matplotlib.use('Agg')  # Use a non-GUI backend
-import matplotlib.pyplot as plt
-
 import numpy as np
 import plotly.graph_objects as go
 
-# Create a directory to save the plots if it doesn't exist
-save_dir = 'quantum_plots'
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+    
+import os
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import Aer
+from qiskit.quantum_info import partial_trace
+from qiskit.visualization import plot_bloch_multivector
+import numpy as np
+import plotly.graph_objects as go
 
 # Create a Quantum Circuit with 2 qubits
 qc = QuantumCircuit(2)
@@ -26,17 +25,12 @@ qc = QuantumCircuit(2)
 # Apply the X gate to qubit 0
 qc.x(0)
 
-# Apply the Hadamard gate to both qubits
-qc.h(0)
+# Apply the Hadamard gate to qubit 1
 qc.h(1)
 
-# Apply a CNOT gate, with qubit 0 as control and qubit 1 as target
-qc.cx(0, 1)
+# Apply a CNOT gate with qubit 1 as control and qubit 0 as target
+qc.cx(1, 0)
 
-
-'''
-
-viz_code = '''
 
 save_dir = 'quantum_plots'
 if not os.path.exists(save_dir):
@@ -172,5 +166,3 @@ counts = result.get_counts()
 
 # Print the measurement counts
 print('Result counts:', counts)
-
-'''

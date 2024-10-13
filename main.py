@@ -1,3 +1,4 @@
+import re
 from flask import Flask, request, jsonify
 import os
 import json
@@ -20,6 +21,7 @@ from phi.embedder.openai import OpenAIEmbedder
 from phi.vectordb.pgvector import PgVector2
 from phi.storage.assistant.postgres import PgAssistantStorage
 from phi.document.reader.website import WebsiteReader
+from typing import List
 import uuid
 import os
 
@@ -46,7 +48,7 @@ def get_groq_assistant(collection_name: str) -> Assistant:
             ),
             num_documents=2,
         ),
-        description="You are an AI chatbot called 'QuantumViz' and your task is to take ideas, and turn them into quantum circuits. Your job is always to only create python code for quantum circuits and make sure that the quantum circuit is always labelled as qc variable name",
+        description=rag_system_prompt,
         add_references_to_prompt=True,
         markdown=True,
         add_chat_history_to_messages=True,
@@ -57,37 +59,37 @@ def initialize_knowledge_base():
     assistant = get_groq_assistant(collection_name=GLOBAL_BUSINESS_ID)
     return assistant
 
-def load_documents_from_links(links: List[str]) -> List[Document]:
-    reader = WebsiteReader()
-    documents = []
-    for link in links:
-        try:
-            doc = reader.load(link)
-            documents.extend(doc)
-        except Exception as e:
-            print(f"Error loading {link}: {str(e)}")
-    return documents
 
-@app.route('/rag_upload', methods=['POST'])
+@app.route('/rag_upload', methods=['GET'])
 def rag_upload():
     try:
         assistant = initialize_knowledge_base()
-        
-        # Check if documents are already loaded
-        if assistant.knowledge_base.vector_db.count() > 0:
-            return jsonify({"message": "Knowledge base already populated", "count": assistant.knowledge_base.vector_db.count()}), 200
-        
-        # Load documents from Qiskit links
-        all_rag_documents = load_documents_from_links(Qiskit_links)
-        
-        if all_rag_documents:
-            assistant.knowledge_base.load_documents(all_rag_documents, upsert=True)
-            return jsonify({"message": "Files uploaded and processed successfully", "count": len(all_rag_documents)}), 200
-        else:
-            return jsonify({"error": "No documents to upload"}), 500
+        scraper = WebsiteReader(max_links=2, max_depth=1)
+        for url in Qiskit_links:
+            web_documents: List[Document] = scraper.read(url)
+            if web_documents:
+                assistant.knowledge_base.load_documents(web_documents, upsert=True)
+        return jsonify({"message": "Files uploaded and processed successfully", "count": len(Qiskit_links)}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+def rag_chat_utkarsh(question):
+    try:
+        if not question:
+            raise ValueError("Missing question")
+
+        assistant = get_groq_assistant(collection_name=GLOBAL_BUSINESS_ID)
+        
+        response = ""
+        for delta in assistant.run(question):
+            response += delta
+
+        return response
+    
+    except Exception as e:
+        raise Exception(f"Error in rag_chat_utkarsh: {str(e)}")
+    
 @app.route('/rag_chat', methods=['POST'])
 def rag_chat():
     try:
@@ -107,23 +109,9 @@ def rag_chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-def rag_chat_utkarsh(question):
-    global global_assistant, global_run_id
-    
-    if global_assistant is None:
-        global_assistant, global_run_id = initialize_knowledge_base()
-    
-    data = request.json
-    question = data.get('question')
-    
-    if not question:
-        return jsonify({"error": "Missing question"}), 400
-    
-    response = ""
-    for delta in global_assistant.run(question):
-        response += delta
-    
-    return jsonify({"response": response, "run_id": global_run_id}), 200
+
+
+
 
 @app.route('/get_qiskit_code', methods=['POST'])
 def get_code_utkarsh():
@@ -132,12 +120,49 @@ def get_code_utkarsh():
 
     try:
         qiskit_code = rag_chat_utkarsh(user_input)
+        pattern = re.compile(r'-----FORMAT-----(.*?)-----FORMAT-----', re.DOTALL)
+        matches = pattern.findall(qiskit_code)
+        
+        if not matches:
+            raise ValueError("No formatted text found in response")
+        
+        qiskit_code = matches[0].strip()
+        
     except Exception as e:
-        return jsonify({"error": f"Failed to get response from rag_chat: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to get response from rag_chat_utkarsh: {str(e)}"}), 500
 
     # Assuming viz_code is defined elsewhere
-    print("quiskit code", qiskit_code)
-    final_exec_code = qiskit_code + viz_code
+    print("quiskit code")
+    print("--------------------------------")
+    print(qiskit_code)
+    print("--------------------------------")
+    print("viz code")
+    print("--------------------------------")
+    print(viz_code)
+    import_section = '''
+import os
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import Aer
+from qiskit.quantum_info import partial_trace
+from qiskit.visualization import plot_bloch_multivector
+import numpy as np
+import plotly.graph_objects as go
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+    '''
+    print("import section")
+    print("--------------------------------")
+    print(import_section)
+    print("--------------------------------")
+        
+    final_exec_code = import_section + '\n' + qiskit_code + '\n' + viz_code
+    
+    print("final exec code")
+    print("--------------------------------")
+    print(final_exec_code)
+    print("--------------------------------")
     
     html_output_folder = './quantum_plots'
     try:
