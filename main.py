@@ -3,6 +3,7 @@ import os
 import json
 import openai
 from prompt import *
+from viz_code import *
 from circuit_gen import *
 from dotenv import load_dotenv
 
@@ -13,9 +14,18 @@ app = Flask(__name__)
 def get_code_utkarsh():
     data = request.get_json()
     user_input = data["user_input"]
-    
-    
+
     '''some code'''
+    
+    final_exec_code = qiskit_code + viz_code
+    try:
+        exec(final_exec_code)
+        
+        return jsonify("code executed successfully")
+        
+    except Exception as e:
+        print(e)
+        
     
 # Flask endpoint for processing the prompt
 @app.route('/process-prompt', methods=['POST'])

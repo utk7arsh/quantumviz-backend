@@ -1,9 +1,13 @@
 from pydantic import BaseModel
 from typing import Any, List, Union
 
+class JSONCircuit(BaseModel):
+    cols: List[List[Union[str, int]]]
+    
 class StructuredOutput(BaseModel):
+    JSON_circuit: JSONCircuit
     Quirk_Circuit_Link: str
-    Qiskit_Code: str
+
 
 system_prompt= '''
 You are a Quantum Research Assistant with expertise in designing quantum circuits. Your task is to take a user-provided quantum circuit description and return:
