@@ -24,6 +24,12 @@ from phi.vectordb.pgvector import PgVector2
 from phi.storage.assistant.postgres import PgAssistantStorage
 from phi.document.reader.website import WebsiteReader
 
+import base64
+import wave
+from pydub import AudioSegment
+import io
+import binascii
+
 app = Flask(__name__)
 CORS(app)
 
@@ -314,32 +320,69 @@ def process_prompt():
     return jsonify({"errors": error_chain}), 500
 
 
+# Define the audio files directory
+AUDIO_FILES_DIR = os.path.join(os.path.dirname(__file__), 'audio_files')
+
+# Ensure the audio files directory exists
+os.makedirs(AUDIO_FILES_DIR, exist_ok=True)
+
 @app.route('/transcribe-audio', methods=['POST'])
-def transcribe_audio():
-    error_chain = []
+def handle_transcribe_audio():
     try:
         data = request.get_json()
-        audio_file = data.get("audio_file")
-        
-        # Check if the audio file is in the request
-        if 'audio_file' not in request.files:
-            error_chain.append("Audio file is required")
-            return jsonify({"errors": error_chain}), 400
-
-        audio_filename = "./audio_files/recorded_audio.wav"
-        audio_file.save(audio_filename)  # Save the uploaded audio file
-        user_input = transcribe_audio(audio_filename)
+        if not data or 'audio_data' not in data:
+            return jsonify({"error": "Audio data is required"}), 400
 
         try:
-            response = process_user_prompt(user_input)
+            # Decode base64 audio data
+            audio_data = base64.b64decode(data['audio_data'])
+        except binascii.Error as e:
+            return jsonify({"error": f"Invalid base64 encoding: {str(e)}"}), 400
+
+        # Determine the audio format (you might need to send this info from the client)
+        audio_format = data.get('audio_format', 'webm')  # Default to webm if not specified
+
+        try:
+            # Convert to WAV using pydub
+            audio = AudioSegment.from_file(io.BytesIO(audio_data), format=audio_format)
         except Exception as e:
-            error_chain.append(f"Error in process_user_prompt: {str(e)}")
+            return jsonify({"error": f"Error processing audio data: {str(e)}"}), 400
+        
+        try:
+            # Save as temporary WAV file
+            temp_audio_path = os.path.join(AUDIO_FILES_DIR, 'temp_audio.wav')
+            audio.export(temp_audio_path, format="wav")
+        except Exception as e:
+            return jsonify({"error": f"Error saving temporary audio file: {str(e)}"}), 500
 
-        return jsonify(response), 200
+        try:
+            # Check file size and duration
+            file_size = os.path.getsize(temp_audio_path)
+            duration = len(audio) / 1000.0  # pydub uses milliseconds
+
+            print(f"Audio file size: {file_size} bytes")
+            print(f"Audio duration: {duration} seconds")
+
+            if duration < 0.1:
+                os.remove(temp_audio_path)  # Clean up the file if it's too short
+                return jsonify({"error": "Audio file is too short. Minimum audio length is 0.1 seconds."}), 400
+        except Exception as e:
+            return jsonify({"error": f"Error checking audio file: {str(e)}"}), 500
+
+        try:
+            transcription = transcribe_audio(temp_audio_path)
+        except Exception as e:
+            return jsonify({"error": f"Error in transcribe_audio: {str(e)}"}), 500
+        finally:
+            # Clean up the temporary file
+            if os.path.exists(temp_audio_path):
+                os.remove(temp_audio_path)
+
+        return jsonify({"transcription": transcription}), 200
     except Exception as e:
-        error_chain.append(f"Error in transcribe_audio: {str(e)}")
+        return jsonify({"error": f"Unexpected error in handle_transcribe_audio: {str(e)}"}), 500
 
-    return jsonify({"errors": error_chain}), 500
+
 
 
 if __name__ == '__main__':

@@ -83,3 +83,4 @@ matplotlib
 flask-cors
 whisper
 pyaudio
+pydub

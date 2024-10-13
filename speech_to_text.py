@@ -40,16 +40,17 @@ def record_audio(filename, duration=20):
         wf.writeframes(b''.join(frames))
 
 
-def transcribe_audio(audio_filename):
-    # Open the recorded audio file for transcription
-    audio_file = open(audio_filename, "rb")
-    transcription = client.audio.transcriptions.create(
-    model="whisper-1", 
-    file=audio_file, 
-    response_format="text"
-    )
-    
-    return transcription
+def transcribe_audio(audio_file_path):
+    try:
+        with open(audio_file_path, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+                model="whisper-1", 
+                file=audio_file, 
+                response_format="text"
+            )
+        return transcription
+    except Exception as e:
+        raise Exception(f"Error in transcribe_audio: {str(e)}")
 
 
 
