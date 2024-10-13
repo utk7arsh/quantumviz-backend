@@ -80,3 +80,4 @@ qiskit-aer
 qiskit-ibm-runtime
 plotly
 matplotlib
+flask-cors
