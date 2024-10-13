@@ -99,8 +99,45 @@ def chatbot():
         return jsonify({"response": response}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
 
-# RAG helper functions
+@app.route('/chatbot-transcribe-audio', methods=['POST'])
+def chatbot_transcribe_audio():
+    error_chain = []
+    try:
+        # Check if the audio file is in the request
+        if 'audio_file' not in request.files:
+            error_chain.append("Audio file is required")
+            return jsonify({"errors": error_chain}), 400
+
+        audio_file = request.files['audio_file']
+        audio_filename = "./audio_files/recorded_audio.wav"
+        audio_file.save(audio_filename)  # Save the uploaded audio file
+        
+        user_input = transcribe_audio(audio_filename)
+
+        # Call the /chatbot endpoint with the transcribed text
+        assistant = get_chatbot_assistant(collection_name=CHATBOT_BUSINESS_ID)
+        
+        response = ""
+        for delta in assistant.run(user_input):
+            response += delta
+
+        return jsonify({
+            "transcribed_text": user_input,
+            "chatbot_response": response
+        }), 200
+
+    except Exception as e:
+        error_chain.append(f"Error in chatbot_transcribe_audio: {str(e)}")
+        return jsonify({"errors": error_chain}), 500
+
+
+##########################
+#### RAG helper functions ####
+##########################
+
 def get_groq_assistant(collection_name: str) -> Assistant:
     embedder = OpenAIEmbedder(model="text-embedding-3-small", dimensions=1536)
     return Assistant(
