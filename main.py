@@ -28,7 +28,7 @@ app = Flask(__name__)
 global_assistant: Optional[Assistant] = None
 global_run_id: Optional[str] = None
 # Database configuration
-db_url = "postgresql+psycopg://ai:ai@localhost:5532/ai"
+db_url = "postgresql+psycopg2://ai:ai@localhost:5532/ai"
 Qiskit_links = ["https://docs.quantum.ibm.com/guides", "https://docs.quantum.ibm.com/guides/install-qiskit", "https://docs.quantum.ibm.com/guides/setup-channel", "https://docs.quantum.ibm.com/guides/online-lab-environments", "https://docs.quantum.ibm.com/guides/install-qiskit-source", "https://docs.quantum.ibm.com/guides/configure-qiskit-local", "https://docs.quantum.ibm.com/guides/hello-world", "https://docs.quantum.ibm.com/guides/intro-to-patterns", "https://docs.quantum.ibm.com/guides/map-problem-to-circuits", "https://docs.quantum.ibm.com/guides/optimize-for-hardware", "https://docs.quantum.ibm.com/guides/execute-on-hardware", "https://docs.quantum.ibm.com/guides/post-process-results", "https://docs.quantum.ibm.com/guides/latest-updates", "https://docs.quantum.ibm.com/guides/functions", "https://docs.quantum.ibm.com/guides/ibm-circuit-function", "https://docs.quantum.ibm.com/guides/algorithmiq-tem", "https://docs.quantum.ibm.com/guides/q-ctrl-performance-management", "https://docs.quantum.ibm.com/guides/qedma-qesem", "https://docs.quantum.ibm.com/guides/q-ctrl-optimization-solver", "https://docs.quantum.ibm.com/guides/circuit-library", "https://docs.quantum.ibm.com/guides/construct-circuits", "https://docs.quantum.ibm.com/guides/classical-feedforward-and-control-flow", "https://docs.quantum.ibm.com/guides/measure-qubits", "https://docs.quantum.ibm.com/guides/synthesize-unitary-operators", "https://docs.quantum.ibm.com/guides/bit-ordering", "https://docs.quantum.ibm.com/guides/save-circuits", "https://docs.quantum.ibm.com/guides/operators-overview", "https://docs.quantum.ibm.com/guides/specify-observables-pauli", "https://docs.quantum.ibm.com/guides/operator-class", "https://docs.quantum.ibm.com/guides/pulse", "https://docs.quantum.ibm.com/guides/introduction-to-qasm", "https://docs.quantum.ibm.com/guides/interoperate-qiskit-qasm2", "https://docs.quantum.ibm.com/guides/interoperate-qiskit-qasm3", "https://docs.quantum.ibm.com/guides/qasm-feature-table", "https://docs.quantum.ibm.com/guides/transpile", "https://docs.quantum.ibm.com/guides/transpiler-stages", "https://docs.quantum.ibm.com/guides/transpile-with-pass-managers", "https://docs.quantum.ibm.com/guides/dynamical-decoupling-pass-manager", "https://docs.quantum.ibm.com/guides/defaults-and-configuration-options", "https://docs.quantum.ibm.com/guides/set-optimization", "https://docs.quantum.ibm.com/guides/common-parameters", "https://docs.quantum.ibm.com/guides/represent-quantum-computers", "https://docs.quantum.ibm.com/guides/qiskit-transpiler-service", "https://docs.quantum.ibm.com/guides/ai-transpiler-passes", "https://docs.quantum.ibm.com/guides/transpile-rest-api", "https://docs.quantum.ibm.com/guides/custom-transpiler-pass", "https://docs.quantum.ibm.com/guides/custom-backend", "https://docs.quantum.ibm.com/guides/transpiler-plugins", "https://docs.quantum.ibm.com/guides/create-transpiler-plugin", "https://docs.quantum.ibm.com/guides/debugging-tools", "https://docs.quantum.ibm.com/guides/simulate-with-qiskit-sdk-primitives", "https://docs.quantum.ibm.com/guides/simulate-with-qiskit-aer", "https://docs.quantum.ibm.com/guides/local-testing-mode", "https://docs.quantum.ibm.com/guides/build-noise-models", "https://docs.quantum.ibm.com/guides/simulate-stabilizer-circuits", "https://docs.quantum.ibm.com/guides/primitives", "https://docs.quantum.ibm.com/guides/get-started-with-primitives", "https://docs.quantum.ibm.com/guides/primitive-input-output", "https://docs.quantum.ibm.com/guides/primitives-examples", "https://docs.quantum.ibm.com/guides/primitives-rest-api", "https://docs.quantum.ibm.com/guides/noise-learning", "https://docs.quantum.ibm.com/guides/runtime-options-overview", "https://docs.quantum.ibm.com/guides/specify-runtime-options", "https://docs.quantum.ibm.com/guides/error-mitigation-and-suppression-techniques", "https://docs.quantum.ibm.com/guides/configure-error-mitigation", "https://docs.quantum.ibm.com/guides/configure-error-suppression", "https://docs.quantum.ibm.com/guides/execution-modes", "https://docs.quantum.ibm.com/guides/sessions", "https://docs.quantum.ibm.com/guides/run-jobs-session", "https://docs.quantum.ibm.com/guides/run-jobs-batch", "https://docs.quantum.ibm.com/guides/repetition-rate-execution", "https://docs.quantum.ibm.com/guides/execution-modes-rest-api", "https://docs.quantum.ibm.com/guides/execution-modes-faq", "https://docs.quantum.ibm.com/guides/monitor-job", "https://docs.quantum.ibm.com/guides/estimate-job-run-time", "https://docs.quantum.ibm.com/guides/minimize-time", "https://docs.quantum.ibm.com/guides/minimize-time", "https://docs.quantum.ibm.com/guides/job-limits", "https://docs.quantum.ibm.com/guides/save-jobs", "https://docs.quantum.ibm.com/guides/processor-types", "https://docs.quantum.ibm.com/guides/qpu-information", "https://docs.quantum.ibm.com/guides/get-qpu-information", "https://docs.quantum.ibm.com/guides/native-gates", "https://docs.quantum.ibm.com/guides/retired-qpus", "https://docs.quantum.ibm.com/guides/dynamic-circuits-considerations", "https://docs.quantum.ibm.com/guides/instances", "https://docs.quantum.ibm.com/guides/fair-share-scheduler", "https://docs.quantum.ibm.com/guides/manage-cost", "https://docs.quantum.ibm.com/guides/visualize-circuits", "https://docs.quantum.ibm.com/guides/plot-quantum-states", "https://docs.quantum.ibm.com/guides/visualize-results", "https://docs.quantum.ibm.com/guides/serverless", "https://docs.quantum.ibm.com/guides/serverless-first-program", "https://docs.quantum.ibm.com/guides/serverless-run-first-workload", "https://docs.quantum.ibm.com/guides/serverless-manage-resources", "https://docs.quantum.ibm.com/guides/serverless-port-code", "https://docs.quantum.ibm.com/guides/addons", "https://docs.quantum.ibm.com/guides/qiskit-code-assistant", "https://docs.quantum.ibm.com/guides/qiskit-code-assistant-jupyterlab", "https://docs.quantum.ibm.com/guides/qiskit-code-assistant-vscode"]
 
 
@@ -59,7 +59,7 @@ def initialize_knowledge_base():
     
     if global_assistant is None:
         global_run_id = str(uuid.uuid4())
-        global_assistant = get_groq_assistant(run_id=global_run_id)
+        global_assistant = get_groq_assistant(collection_name=global_run_id)
         
         # Add Qiskit links to knowledge base
         scraper = WebsiteReader(max_links=1, max_depth=1)
@@ -70,30 +70,17 @@ def initialize_knowledge_base():
     
     return global_assistant, global_run_id
 
-@app.route('/rag_upload', methods=['POST'])
+@app.route('/rag_upload', methods=['GET'])
 def rag_upload():
     global global_assistant, global_run_id
     
     if global_assistant is None:
         global_assistant, global_run_id = initialize_knowledge_base()
     
-    data = request.json
-    urls = data.get('urls', [])
-    pdf_urls = data.get('pdf_urls', [])
-    
-    scraper = WebsiteReader(max_links=2, max_depth=1)
-    for url in urls:
-        web_documents: List[Document] = scraper.read(url)
-        if web_documents:
-            global_assistant.knowledge_base.load_documents(web_documents, upsert=True)
-    
-    pdf_reader = PDFReader()
-    for pdf_url in pdf_urls:
-        pdf_documents: List[Document] = pdf_reader.read(pdf_url)
-        if pdf_documents:
-            global_assistant.knowledge_base.load_documents(pdf_documents, upsert=True)
-    
-    return jsonify({"message": "Knowledge base updated", "run_id": global_run_id}), 200
+    return jsonify({
+        "message": "Knowledge base initialized",
+        "run_id": global_run_id
+    }), 200
 
 @app.route('/rag_chat', methods=['POST'])
 def rag_chat():
@@ -164,3 +151,4 @@ def process_prompt():
 
 if __name__ == '__main__':
     app.run(host = '0.0.0.0', port = '6000', debug=True)
+
