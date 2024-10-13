@@ -280,14 +280,19 @@ import matplotlib.pyplot as plt
     try:
         exec(final_exec_code, globals())
         generated_html_files = []
+        raw_html_code = []
         
         for filename in os.listdir(html_output_folder):
             if filename.endswith('.html'):
                 generated_html_files.append(os.path.join(html_output_folder, filename))
         
+        for file in generated_html_files:
+            with open(file, 'r') as f:
+                raw_html_code.append(f.read())
+            
         return jsonify({
             "message": "code executed successfully",
-            "html_files": generated_html_files,
+            "html_files": raw_html_code,
             "code": final_exec_code
         })
     except Exception as e:
