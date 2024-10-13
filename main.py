@@ -1,15 +1,18 @@
 import re
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import os
 import json
 import openai
-from prompt import chatbot_system_prompt, rag_system_prompt
-from viz_code import viz_code
-from circuit_gen import *
-from dotenv import load_dotenv
 import requests
+from circuit_gen import *
+from flask_cors import CORS
+from speech_to_text import *
+from viz_code import viz_code
+from dotenv import load_dotenv
+from flask import Flask, request, jsonify
+from prompt import chatbot_system_prompt, rag_system_prompt
 
+
+import uuid
 from flask import Flask, request, jsonify
 from typing import List, Optional
 from phi.assistant import Assistant
@@ -20,7 +23,6 @@ from phi.embedder.openai import OpenAIEmbedder
 from phi.vectordb.pgvector import PgVector2
 from phi.storage.assistant.postgres import PgAssistantStorage
 from phi.document.reader.website import WebsiteReader
-import uuid
 
 app = Flask(__name__)
 CORS(app)
@@ -273,6 +275,35 @@ def process_prompt():
         error_chain.append(f"Error in process_prompt: {str(e)}")
 
     return jsonify({"errors": error_chain}), 500
+
+
+@app.route('/transcribe-audio', methods=['POST'])
+def process_prompt():
+    error_chain = []
+    try:
+        data = request.get_json()
+        audio_file = data.get("audio_file")
+        
+        # Check if the audio file is in the request
+        if 'audio_file' not in request.files:
+            error_chain.append("Audio file is required")
+            return jsonify({"errors": error_chain}), 400
+
+        audio_filename = "./audio_files/recorded_audio.wav"
+        audio_file.save(audio_filename)  # Save the uploaded audio file
+        user_input = transcribe_audio(audio_filename)
+
+        try:
+            response = process_user_prompt(user_input)
+        except Exception as e:
+            error_chain.append(f"Error in process_user_prompt: {str(e)}")
+
+        return jsonify(response), 200
+    except Exception as e:
+        error_chain.append(f"Error in transcribe_audio: {str(e)}")
+
+    return jsonify({"errors": error_chain}), 500
+
 
 if __name__ == '__main__':
     app.run(host = '0.0.0.0', port = '8080', debug=True)
