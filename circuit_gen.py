@@ -31,7 +31,7 @@ def openai_chat(user_prompt, sys_prompt):
     except Exception as e:
         return f"An error occurred: {e}"
 
-def process_user_prompt(user_prompt, image_urls=None):
+def process_user_prompt(user_prompt):
     try:  
         print(system_prompt)
         

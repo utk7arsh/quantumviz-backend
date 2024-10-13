@@ -140,16 +140,15 @@ def process_prompt():
     try:
         # Get JSON data from the POST request
         data = request.json
-        user_prompt = data.get('user_prompt')
-        image_urls = data.get('image_urls', None)
+        user_input = data.get('user_input')
 
-        if not user_prompt:
+        if not user_input:
             error_chain.append("user_prompt is required")
             return jsonify({"errors": error_chain}), 400
 
         # Process the user prompt
         try:
-            response = process_user_prompt(user_prompt, image_urls)
+            response = process_user_prompt(user_input)
         except Exception as e:
             error_chain.append(f"Error in process_user_prompt: {str(e)}")
 
