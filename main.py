@@ -3,7 +3,7 @@ import os
 import json
 import openai
 from prompt import *
-from viz_code import *
+from viz_code import viz_code
 from circuit_gen import *
 from dotenv import load_dotenv
 import requests
@@ -114,10 +114,22 @@ def get_code_utkarsh():
 
     # Assuming viz_code is defined elsewhere
     final_exec_code = qiskit_code + viz_code
-
+    
+    html_output_folder = '/Users/aashmanrastogi/Desktop/quantumviz-backend/quantum_plots'
     try:
-        exec(final_exec_code)
-        return jsonify("code executed successfully")
+        exec(final_exec_code, globals())
+        # List to store paths of generated HTML files
+        generated_html_files = []
+        
+        # Search for HTML files in the specified folder
+        for filename in os.listdir(html_output_folder):
+            if filename.endswith('.html'):
+                generated_html_files.append(os.path.join(html_output_folder, filename))
+        
+        return jsonify({
+            "message": "code executed successfully",
+            "html_files": generated_html_files
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
