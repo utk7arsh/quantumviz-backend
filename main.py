@@ -315,7 +315,7 @@ def process_prompt():
 
 
 @app.route('/transcribe-audio', methods=['POST'])
-def process_prompt():
+def transcribe_audio():
     error_chain = []
     try:
         data = request.get_json()
