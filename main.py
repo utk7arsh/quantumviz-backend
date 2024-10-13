@@ -1,5 +1,6 @@
 import re
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
 import json
 import openai
@@ -8,8 +9,6 @@ from viz_code import viz_code
 from circuit_gen import *
 from dotenv import load_dotenv
 import requests
-
-app = Flask(__name__)
 
 from flask import Flask, request, jsonify
 from typing import List, Optional
@@ -26,7 +25,10 @@ import uuid
 import os
 
 app = Flask(__name__)
+CORS(app)
 
+global_assistant: Optional[Assistant] = None
+global_run_id: Optional[str] = None
 # Database configuration
 db_url = "postgresql+psycopg2://ai:ai@localhost:5532/ai"
 GLOBAL_BUSINESS_ID = "global_knowledge_base"
@@ -210,4 +212,4 @@ def process_prompt():
     return jsonify({"errors": error_chain}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='6000', debug=True)
+    app.run(host = '0.0.0.0', port = '8080', debug=True)
