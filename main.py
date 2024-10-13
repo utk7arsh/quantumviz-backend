@@ -112,34 +112,60 @@ def chatbot():
 
 @app.route('/chatbot-transcribe-audio', methods=['POST'])
 def chatbot_transcribe_audio():
-    error_chain = []
     try:
-        # Check if the audio file is in the request
-        if 'audio_file' not in request.files:
-            error_chain.append("Audio file is required")
-            return jsonify({"errors": error_chain}), 400
+        data = request.get_json()
+        if not data or 'audio_data' not in data:
+            return jsonify({"error": "Audio data is required"}), 400
 
-        audio_file = request.files['audio_file']
-        audio_filename = "./audio_files/recorded_audio.wav"
-        audio_file.save(audio_filename)  # Save the uploaded audio file
+        try:
+            # Decode base64 audio data
+            audio_data = base64.b64decode(data['audio_data'])
+        except binascii.Error as e:
+            return jsonify({"error": f"Invalid base64 encoding: {str(e)}"}), 400
+
+        # Determine the audio format (you might need to send this info from the client)
+        audio_format = data.get('audio_format', 'webm')  # Default to webm if not specified
+
+        try:
+            # Convert to WAV using pydub
+            audio = AudioSegment.from_file(io.BytesIO(audio_data), format=audio_format)
+        except Exception as e:
+            return jsonify({"error": f"Error processing audio data: {str(e)}"}), 400
         
-        user_input = transcribe_audio(audio_filename)
+        try:
+            # Save as temporary WAV file
+            temp_audio_path = os.path.join(AUDIO_FILES_DIR, 'temp_audio.wav')
+            audio.export(temp_audio_path, format="wav")
+        except Exception as e:
+            return jsonify({"error": f"Error saving temporary audio file: {str(e)}"}), 500
 
-        # Call the /chatbot endpoint with the transcribed text
-        assistant = get_chatbot_assistant(collection_name=CHATBOT_BUSINESS_ID)
-        
-        response = ""
-        for delta in assistant.run(user_input):
-            response += delta
+        try:
+            # Check file size and duration
+            file_size = os.path.getsize(temp_audio_path)
+            duration = len(audio) / 1000.0  # pydub uses milliseconds
 
-        return jsonify({
-            "transcribed_text": user_input,
-            "chatbot_response": response
-        }), 200
+            print(f"Audio file size: {file_size} bytes")
+            print(f"Audio duration: {duration} seconds")
 
+            if duration < 0.1:
+                os.remove(temp_audio_path)  # Clean up the file if it's too short
+                return jsonify({"error": "Audio file is too short. Minimum audio length is 0.1 seconds."}), 400
+        except Exception as e:
+            return jsonify({"error": f"Error checking audio file: {str(e)}"}), 500
+
+        try:
+            transcription = transcribe_audio(temp_audio_path)
+        except Exception as e:
+            return jsonify({"error": f"Error in transcribe_audio: {str(e)}"}), 500
+        finally:
+            # Clean up the temporary file
+            if os.path.exists(temp_audio_path):
+                os.remove(temp_audio_path)
+
+        return jsonify({"transcription": transcription}), 200
     except Exception as e:
-        error_chain.append(f"Error in chatbot_transcribe_audio: {str(e)}")
-        return jsonify({"errors": error_chain}), 500
+        return jsonify({"error": f"Unexpected error in handle_transcribe_audio: {str(e)}"}), 500
+ 
 
 
 ##########################
