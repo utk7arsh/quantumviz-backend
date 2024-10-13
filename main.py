@@ -19,6 +19,7 @@ from phi.embedder.openai import OpenAIEmbedder
 from phi.vectordb.pgvector import PgVector2
 from phi.storage.assistant.postgres import PgAssistantStorage
 from phi.document.reader.website import WebsiteReader
+from phi.document.reader.pdf import PDFReader
 import os
 
 app = Flask(__name__)
