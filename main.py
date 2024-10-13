@@ -242,7 +242,8 @@ import matplotlib.pyplot as plt
         
         return jsonify({
             "message": "code executed successfully",
-            "html_files": generated_html_files
+            "html_files": generated_html_files,
+            "code": final_exec_code
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

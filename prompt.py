@@ -105,6 +105,7 @@ qc.cx(0, 1)
 </OUTPUT>
 </EXAMPLE 3>
 
+
 Ensure that the final code output in wrapped around by -----FORMAT----- in the beginning and the end, no other text should be present.
 '''
 
@@ -233,4 +234,40 @@ There exist 2 qubits. Apply the X gate to both qubits. Then, apply the Y gate to
 }
 </OUTPUT>
 </EXAMPLE 6>
+
+
+<EXAMPLE 7>
+<USER INPUT>
+Create a toffoli circuit 
+</USER INPUT>
+
+<OUTPUT>
+{
+  "JSON_circuit": {
+    "cols": [
+      ["•","•","X"]
+    ]
+  },
+  "Quirk_Circuit_Link": "https://algassert.com/quirk#circuit=%7B%22cols%22%3A%5B%5B%22%E2%80%A2%22%2C%22%E2%80%A2%22%2C%22X%22%5D%5D%7D",
+}
+</OUTPUT>
+</EXAMPLE 7>
+
+
+<EXAMPLE 8>
+<USER INPUT>
+Create a toffoli circuit 
+</USER INPUT>
+
+<OUTPUT>
+{
+  "JSON_circuit": {
+    "cols": [
+      ["•","•","X"]
+    ]
+  },
+  "Quirk_Circuit_Link": "https://algassert.com/quirk#circuit=%7B%22cols%22%3A%5B%5B%22%E2%80%A2%22%2C%22%E2%80%A2%22%2C%22X%22%5D%5D%7D",
+}
+</OUTPUT>
+</EXAMPLE 7>
 '''
