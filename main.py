@@ -464,7 +464,15 @@ def handle_transcribe_audio():
     except Exception as e:
         return jsonify({"error": f"Unexpected error in handle_transcribe_audio: {str(e)}"}), 500
 
+QUANTUM_PLOTS_DIR = os.path.join(os.getcwd(), "quantum_plots")
 
+# Route to serve HTML files from the quantum_plots directory
+@app.route("/plots/<path:filename>")
+def serve_plot(filename):
+    response = send_from_directory(QUANTUM_PLOTS_DIR, filename)
+    response.headers['X-Frame-Options'] = 'ALLOW-FROM http://localhost:3000'
+    response.headers['Content-Security-Policy'] = "frame-ancestors 'self' http://localhost:3000"
+    return response
 
 
 if __name__ == '__main__':
