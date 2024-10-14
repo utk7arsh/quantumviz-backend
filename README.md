@@ -1,5 +1,8 @@
 # QuantumViz
 
+![image](https://github.com/user-attachments/assets/0cb156fa-b698-40c4-bbed-548573436bf6)
+
+
 QuantumViz is a quantum circuit generator that simplifies and enhances the process of designing quantum computing by text or speech using AI to generate interactive 3D visualization, executable code snippets, and a customized chatbot trained on Quantum Code Documentation and Research Papers. It addresses key pain points identified by leading experts in the field, offering a more visual and intuitive interface for users to create complex quantum circuits without the need for extensive coding knowledge at all.
 
 
